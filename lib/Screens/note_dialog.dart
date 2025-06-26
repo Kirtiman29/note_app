@@ -28,8 +28,13 @@ class _NoteDialogState extends State<NoteDialog> {
   late int _selectedColorIndex;
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+    _selectedColorIndex = widget.colorIndex;
+  }
 
+  @override
+  Widget build(BuildContext context) {
     final titleController = TextEditingController(text: widget.title);
     final descriptionController = TextEditingController(text: widget.content);
 
@@ -45,12 +50,12 @@ class _NoteDialogState extends State<NoteDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [Text(currentDate,
-          style: const TextStyle(
-            color: Colors.black54,
-            fontSize: 14
-          ),),
-          const SizedBox(height: 16,),
+          children: [
+            Text(
+              currentDate,
+              style: const TextStyle(color: Colors.black54, fontSize: 14),
+            ),
+            const SizedBox(height: 16),
 
             TextField(
               controller: titleController,
@@ -60,32 +65,78 @@ class _NoteDialogState extends State<NoteDialog> {
                 labelText: 'Title',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none
-                )
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
 
-            const SizedBox(height: 16,),
+            const SizedBox(height: 16),
             TextField(
               controller: descriptionController,
               maxLines: 5,
               decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.5),
-                  labelText: 'Description',
-                  alignLabelWithHint: true,
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none
-                  )
+                filled: true,
+                fillColor: Colors.white.withOpacity(0.5),
+                labelText: 'Description',
+                alignLabelWithHint: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
+            const SizedBox(height: 16),
 
-
+            Wrap(
+              spacing: 8,
+              children: List.generate(
+                widget.noteColors.length,
+                (index) => GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedColorIndex = index;
+                    });
+                  },
+                  child: CircleAvatar(
+                    radius: 16,
+                    backgroundColor: widget.noteColors[index],
+                    child: _selectedColorIndex == index
+                        ? const Icon(Icons.check, color: Colors.black54)
+                        : null,
+                  ),
+                ),
+              ),
+            ),
           ],
-
         ),
       ),
+
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+
+          },
+          child: const Text('Cancel', style: TextStyle(color: Colors.black54)),
+        ),
+        ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black87,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+
+            )
+            ),
+            onPressed: () async {
+          final newTitle = titleController.text;
+          final newDescription = descriptionController.text;
+
+          widget.onNoteSaved(
+            newTitle,newDescription,_selectedColorIndex,currentDate,
+              Navigator.pop(context)
+          );
+        }, child: const Text('Save'))
+      ],
     );
   }
 }
