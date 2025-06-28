@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -8,7 +7,7 @@ class NoteDialog extends StatefulWidget {
   final String? content;
   final int colorIndex;
   final List<Color> noteColors;
-  final Function onNoteSaved;
+  final Function(String, String, int, String) onNoteSaved;
 
   const NoteDialog({
     super.key,
@@ -26,24 +25,33 @@ class NoteDialog extends StatefulWidget {
 
 class _NoteDialogState extends State<NoteDialog> {
   late int _selectedColorIndex;
+  late TextEditingController titleController;
+  late TextEditingController descriptionController;
 
   @override
   void initState() {
     super.initState();
     _selectedColorIndex = widget.colorIndex;
+    titleController = TextEditingController(text: widget.title);
+    descriptionController = TextEditingController(text: widget.content);
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    descriptionController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final titleController = TextEditingController(text: widget.title);
-    final descriptionController = TextEditingController(text: widget.content);
-
     final currentDate = DateFormat('E d MMM').format(DateTime.now());
+
     return AlertDialog(
       backgroundColor: widget.noteColors[_selectedColorIndex],
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: Text(
-        widget.noteId == null ? 'Add Note ' : 'Edit Note',
+        widget.noteId == null ? 'Add Note' : 'Edit Note',
         style: const TextStyle(color: Colors.black87),
       ),
       content: SingleChildScrollView(
@@ -51,12 +59,8 @@ class _NoteDialogState extends State<NoteDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              currentDate,
-              style: const TextStyle(color: Colors.black54, fontSize: 14),
-            ),
+            Text(currentDate, style: const TextStyle(color: Colors.black54, fontSize: 14)),
             const SizedBox(height: 16),
-
             TextField(
               controller: titleController,
               decoration: InputDecoration(
@@ -69,7 +73,6 @@ class _NoteDialogState extends State<NoteDialog> {
                 ),
               ),
             ),
-
             const SizedBox(height: 16),
             TextField(
               controller: descriptionController,
@@ -86,17 +89,12 @@ class _NoteDialogState extends State<NoteDialog> {
               ),
             ),
             const SizedBox(height: 16),
-
             Wrap(
               spacing: 8,
               children: List.generate(
                 widget.noteColors.length,
-                (index) => GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedColorIndex = index;
-                    });
-                  },
+                    (index) => GestureDetector(
+                  onTap: () => setState(() => _selectedColorIndex = index),
                   child: CircleAvatar(
                     radius: 16,
                     backgroundColor: widget.noteColors[index],
@@ -110,32 +108,27 @@ class _NoteDialogState extends State<NoteDialog> {
           ],
         ),
       ),
-
       actions: [
         TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-
-          },
+          onPressed: () => Navigator.pop(context),
           child: const Text('Cancel', style: TextStyle(color: Colors.black54)),
         ),
         ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black87,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-
-            )
-            ),
-            onPressed: () async {
-          final newTitle = titleController.text;
-          final newDescription = descriptionController.text;
-
-          widget.onNoteSaved(
-            newTitle,newDescription,_selectedColorIndex,currentDate,
-              Navigator.pop(context)
-          );
-        }, child: const Text('Save'))
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.black87,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          onPressed: () {
+            widget.onNoteSaved(
+              titleController.text,
+              descriptionController.text,
+              _selectedColorIndex,
+              currentDate,
+            );
+            Navigator.pop(context);
+          },
+          child: const Text('Save'),
+        ),
       ],
     );
   }
